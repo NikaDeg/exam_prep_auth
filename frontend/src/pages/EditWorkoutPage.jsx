@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const EditWorkoutPage = () => {
+const EditWorkoutPage = ({ user, onLogout }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [workout, setWorkout] = useState(null);
@@ -36,10 +36,18 @@ const EditWorkoutPage = () => {
     try {
       const response = await fetch(`/api/workouts/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
         body: JSON.stringify(values),
       });
       const data = await response.json();
+      if (response.status === 401) {
+        onLogout();
+        navigate("/login");
+        return;
+      }
       if (!response.ok)
         throw new Error(data.error || "Could not update workout");
       navigate(`/workouts/${id}`);

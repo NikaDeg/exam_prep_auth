@@ -1,15 +1,15 @@
-const logger = require('../utils/logger');
+const logger = require("../utils/logger");
 
 const unknownEndpoint = (req, res) => {
-  res.status(404).send({ error: 'unknown endpoint' });
+  res.status(404).send({ error: "unknown endpoint" });
 };
 
 const errorHandler = (error, req, res, next) => {
   logger.error(error.message);
 
-  if (error.name === 'CastError') {
-    return res.status(400).send({ error: 'malformatted id' });
-  } else if (error.name === 'ValidationError') {
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
     return res.status(400).json({ error: error.message });
   }
 
@@ -17,12 +17,13 @@ const errorHandler = (error, req, res, next) => {
 };
 
 const requestLogger = (req, res, next) => {
-  logger.info('Method:', req.method);
-  logger.info('Path:  ', req.path);
-  logger.info('Body:  ', req.body);
-  logger.info('---');
+  logger.info("Method:", req.method);
+  logger.info("Path:  ", req.path);
+  const body = req.body ? { ...req.body } : undefined;
+  if (body && Object.hasOwn(body, "password")) body.password = "[redacted]";
+  logger.info("Body:  ", body);
+  logger.info("---");
   next();
 };
 
 module.exports = { unknownEndpoint, errorHandler, requestLogger };
-

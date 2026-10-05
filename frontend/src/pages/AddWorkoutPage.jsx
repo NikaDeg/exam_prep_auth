@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const AddWorkoutPage = () => {
+const AddWorkoutPage = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -14,10 +14,18 @@ const AddWorkoutPage = () => {
     try {
       const response = await fetch("/api/workouts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
         body: JSON.stringify(workout),
       });
       const data = await response.json();
+      if (response.status === 401) {
+        onLogout();
+        navigate("/login");
+        return;
+      }
       if (!response.ok) throw new Error(data.error || "Could not add workout");
       navigate("/");
     } catch (err) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-const WorkoutPage = () => {
+const WorkoutPage = ({ user, onLogout }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [workout, setWorkout] = useState(null);
@@ -34,7 +34,15 @@ const WorkoutPage = () => {
     setDeleting(true);
     setError("");
     try {
-      const response = await fetch(`/api/workouts/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/workouts/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (response.status === 401) {
+        onLogout();
+        navigate("/login");
+        return;
+      }
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || "Could not delete workout");
@@ -57,14 +65,18 @@ const WorkoutPage = () => {
       <p>{workout.description}</p>
       <p>Price: ${workout.price.toFixed(2)}</p>
       {error && <p role="alert">{error}</p>}
-      <div className="workout-actions">
-        <button type="button" onClick={() => navigate(`/edit-workout/${id}`)}>
-          Edit Workout
-        </button>
-        <button type="button" onClick={deleteWorkout} disabled={deleting}>
-          {deleting ? "Deleting..." : "Delete Workout"}
-        </button>
-      </div>
+      {user ? (
+        <div className="workout-actions">
+          <button type="button" onClick={() => navigate(`/edit-workout/${id}`)}>
+            Edit Workout
+          </button>
+          <button type="button" onClick={deleteWorkout} disabled={deleting}>
+            {deleting ? "Deleting..." : "Delete Workout"}
+          </button>
+        </div>
+      ) : (
+        <Link to="/login">Log In</Link>
+      )}
     </div>
   );
 };
